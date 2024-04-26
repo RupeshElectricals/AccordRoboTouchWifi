@@ -1,0 +1,192 @@
+C51 COMPILER V9.60.7.0   RTIMER0                                                           04/26/2024 15:10:39 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE RTIMER0
+OBJECT MODULE PLACED IN .\Objects\RTimer0.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE Library\StdDriver\src\RTimer0.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\
+                    -Library\Device\Include;.\Library\StdDriver\inc;.\Library\User;.\Library\User) DEBUG OBJECTEXTEND PRINT(.\Listings\RTimer
+                    -0.lst) TABS(2) OBJECT(.\Objects\RTimer0.obj)
+
+line level    source
+
+   1          #include "ML51.h"
+   2          #include "RTimer0.h"
+   3          #include "IO_define.h"
+   4          
+   5          
+   6          UINT16 Timer0Loadvalue=0,Timer1Loadvalue=0;
+   7          UINT8 LoadingTime=0;
+   8          
+   9          UINT8 PreStartTime=0;
+  10          UINT16 Timer0Count=0;
+  11          
+  12          extern unsigned int TimerForChair;
+  13          extern UINT8 OffTime;
+  14          extern bit FlagChairWorking;
+  15          extern bit FlagChairlastMin;
+  16          extern bit FlagOffAud,FlagStopAud;
+  17          extern struct Flag Flags;
+  18          extern code char Remaining_time [];
+  19          /*********************************************************************************************************
+             -***
+  20          *    TIMER 0 interrupt subroutine
+  21          **********************************************************************************************************
+             -**/
+  22          void Timer0_ISR(void) interrupt 1        // Vector @  0x0B
+  23          {
+  24   1        //static  UINT16 Timer0Count=0;
+  25   1        Timer0Count++;
+  26   1        
+  27   1        if(((Timer0Count%TIMER0_1SEC)==0) && OffTime>0)
+  28   1        {
+  29   2          OffTime--;
+  30   2          //ChairAnimation();
+  31   2          if(OffTime==0)
+  32   2          {
+  33   3            FlagChairWorking = 0;
+  34   3            GLCD_ClearAll();
+  35   3            
+  36   3            RELAY = RELAY_ON;
+  37   3            GLCD_Image(0,0,0, Remaining_time,128,16);
+  38   3            TimerForChair = 60;
+  39   3            FlagChairlastMin=1;
+  40   3          }
+  41   2        }
+  42   1        
+  43   1        if(((Timer0Count%TIMER0_1SEC)==0) && TimerForChair>0)
+  44   1        {
+  45   2          if(PreStartTime==0)
+  46   2          {
+  47   3            TimerForChair--;
+  48   3            
+  49   3            //ChairAnimation();
+  50   3            if(TimerForChair==0)
+  51   3            {
+C51 COMPILER V9.60.7.0   RTIMER0                                                           04/26/2024 15:10:39 PAGE 2   
+
+  52   4              RELAY = RELAY_OFF;
+  53   4              if(FlagChairWorking==0)
+  54   4              {
+  55   5                FlagChairlastMin=0;
+  56   5                FlagStopAud=1;
+  57   5                QrScreen();
+  58   5              }
+  59   4              else 
+  60   4              {
+  61   5                FlagOffAud=1;
+  62   5                //FlagChairWorking=0;
+  63   5                
+  64   5                OffTime = 30;
+  65   5              }
+  66   4            }
+  67   3          }
+  68   2          else if(PreStartTime>0)
+  69   2          {
+  70   3            PreStartTime--;
+  71   3            if(PreStartTime==0)
+  72   3            {
+  73   4              GLCD_ClearAll();
+  74   4              GLCD_Image(0,0,0, Remaining_time,128,16);
+  75   4              RELAY = RELAY_ON;
+  76   4            }
+  77   3          }
+  78   2        }
+  79   1        
+  80   1        
+  81   1        if(((Timer0Count%TIMER0_1SEC)==0))
+  82   1        {
+  83   2          LoadingTime++;
+  84   2          Flags.LoadScreen=1;
+  85   2        //  LoadingScreen();
+  86   2          Flags.GetPidCnt++;
+  87   2        }
+  88   1        
+  89   1        
+  90   1        
+  91   1        if(Timer0Count>60000)
+  92   1          Timer0Count=0;
+  93   1        
+  94   1        LOAD_TIMER0;  
+  95   1        clr_TCON_TF0;  
+  96   1      }
+  97          
+  98          
+  99          
+ 100          void TimerFunc(void)
+ 101          {
+ 102   1        if(((Timer0Count%TIMER0_1SEC)==0) && TimerForChair>0)
+ 103   1        {
+ 104   2          if(PreStartTime==0)
+ 105   2          {
+ 106   3            TimerForChair--;
+ 107   3            
+ 108   3            //ChairAnimation();
+ 109   3            if(TimerForChair==0)
+ 110   3            {
+ 111   4              RELAY = RELAY_OFF;
+ 112   4              if(FlagChairWorking==0)
+ 113   4              {
+C51 COMPILER V9.60.7.0   RTIMER0                                                           04/26/2024 15:10:39 PAGE 3   
+
+ 114   5                FlagChairlastMin=0;
+ 115   5                FlagStopAud=1;
+ 116   5                QrScreen();
+ 117   5              }
+ 118   4              else 
+ 119   4              {
+ 120   5                FlagOffAud=1;
+ 121   5                //FlagChairWorking=0;
+ 122   5                
+ 123   5                OffTime = 30;
+ 124   5              }
+ 125   4            }
+ 126   3          }
+ 127   2          else if(PreStartTime>0)
+ 128   2          {
+ 129   3            PreStartTime--;
+ 130   3            if(PreStartTime==0)
+ 131   3            {
+ 132   4              GLCD_ClearAll();
+ 133   4              GLCD_Image(0,0,0, Remaining_time,128,16);
+ 134   4              RELAY = RELAY_ON;
+ 135   4            }
+ 136   3          }
+ 137   2        }
+ 138   1        
+ 139   1        
+ 140   1        if(((Timer0Count%TIMER0_1SEC)==0))
+ 141   1        {
+ 142   2          LoadingTime++;
+ 143   2        //  LoadingScreen();
+ 144   2          Flags.GetPidCnt++;
+ 145   2        }
+ 146   1      }
+ 147          
+ 148          
+ 149          
+ 150          
+ 151          //----------------TIMER 0 INITIALISATION-----------------//
+ 152          //@ INPUT Msec : Timer0 msec configuration (0  - 48), change value of  TIMER0_MSEC for different MSEC
+ 153          // Note : this function not Enable the Timer 0 Interrupt
+ 154          // For interrupt enable use TIMER0_INTR_EN
+ 155          
+ 156          void Timer0_Init(UINT8 Msec)
+ 157          {
+ 158   1        TMOD |=0x01;                      //TIME0 16 bit
+ 159   1        Timer0Loadvalue = 65535 - (2000 * Msec);
+ 160   1        LOAD_TIMER0;
+ 161   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    580    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      8    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

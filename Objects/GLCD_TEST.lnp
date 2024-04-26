@@ -1,0 +1,8 @@
+".\Objects\STARTUP.obj",
+".\Objects\Main.obj",
+".\Objects\GLCD.obj",
+".\Objects\uart.obj",
+".\Objects\RGsm_At.obj",
+".\Objects\RDataFlash.obj" 
+TO ".\Objects\GLCD_TEST" 
+PRINT(".\Listings\GLCD_TEST.m51") RAMSIZE(256) 

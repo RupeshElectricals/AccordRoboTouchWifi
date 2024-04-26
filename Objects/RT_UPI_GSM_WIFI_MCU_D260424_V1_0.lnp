@@ -1,0 +1,9 @@
+".\Objects\STARTUP.obj",
+".\Objects\Main.obj",
+".\Objects\GLCD.obj",
+".\Objects\uart.obj",
+".\Objects\RGsm_At.obj",
+".\Objects\RDataFlash.obj",
+".\Objects\RTimer0.obj" 
+TO ".\Objects\RT_UPI_GSM_WIFI_MCU_D260424_V1_0" 
+PRINT(".\Listings\RT_UPI_GSM_WIFI_MCU_D260424_V1_0.m51") RAMSIZE(256) 

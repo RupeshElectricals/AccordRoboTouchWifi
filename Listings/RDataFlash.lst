@@ -1,0 +1,124 @@
+C51 COMPILER V9.60.7.0   RDATAFLASH                                                        04/26/2024 15:10:38 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE RDATAFLASH
+OBJECT MODULE PLACED IN .\Objects\RDataFlash.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE Library\StdDriver\src\RDataFlash.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR
+                    -(.\Library\Device\Include;.\Library\StdDriver\inc;.\Library\User;.\Library\User) DEBUG OBJECTEXTEND PRINT(.\Listings\RDa
+                    -taFlash.lst) TABS(2) OBJECT(.\Objects\RDataFlash.obj)
+
+line level    source
+
+   1          #include "ML51.h"
+   2          #include <RDataFlash.h>
+   3          
+   4          bit BIT_TMP;
+   5          UINT8 ResetCount=0;
+   6          extern UINT8 xdata QrArray[];
+   7          extern UINT16 xdata GlcdImageCnt;
+   8          
+   9          void Page_Erase(UINT16 Add)
+  10          {
+  11   1          IAPAL = Add;
+  12   1          IAPAH = Add>>8;
+  13   1          IAPFD = 0xFF;
+  14   1          set_CHPCON_IAPEN; 
+  15   1          set_IAPUEN_APUEN;
+  16   1          IAPCN = 0x22;     
+  17   1          set_IAPTRG_IAPGO; 
+  18   1      }
+  19          
+  20          void Write_Data_Byte(UINT16 Add, UINT8 Data)
+  21          {
+  22   1          IAPAL = Add;
+  23   1          IAPAH = Add>>8;
+  24   1          set_CHPCON_IAPEN; 
+  25   1          set_IAPUEN_APUEN;
+  26   1          IAPCN = 0x21;
+  27   1          IAPFD = Data;
+  28   1          set_IAPTRG_IAPGO;
+  29   1          clr_IAPUEN_APUEN;
+  30   1          clr_CHPCON_IAPEN;
+  31   1      }
+  32          
+  33          
+  34          
+  35          UINT8 Read_Data_Byte(UINT16 code *Add)
+  36          {
+  37   1        UINT8 rdata;
+  38   1        rdata = *Add>>8;
+  39   1        return rdata;
+  40   1      }
+  41          
+  42          void Write_Flash(void)
+  43          {
+  44   1        
+  45   1        UINT16 xdata TempVar = 0;
+  46   1        EA=0;
+  47   1        Page_Erase(FLASH_START_ADD);
+  48   1        Write_Data_Byte(FLASH_START_ADD,0x01);
+  49   1        Write_Data_Byte(FLASH_QRLEN_LADD,GlcdImageCnt%100);
+  50   1        Write_Data_Byte(FLASH_QRLEN_HADD,GlcdImageCnt/100);
+  51   1        
+  52   1        EA=1;
+  53   1      }
+C51 COMPILER V9.60.7.0   RDATAFLASH                                                        04/26/2024 15:10:38 PAGE 2   
+
+  54          
+  55          void WriteFlashQr(UINT16 Length)
+  56          {
+  57   1        UINT16 k=0;
+  58   1        Page_Erase(FLASH_START_IMG_ADD);
+  59   1        for(k=1;k<=Length;k++)
+  60   1        {
+  61   2          if(k%128==0)
+  62   2          {
+  63   3            Page_Erase(FLASH_START_IMG_ADD+k);
+  64   3          }
+  65   2          Write_Data_Byte(FLASH_START_IMG_ADD+(k-1),QrArray[k-1]);
+  66   2        }
+  67   1      }
+  68          
+  69          void ReadFlash(void)
+  70          {
+  71   1        UINT16 TmpCnt=0;
+  72   1        ResetCount  = Read_Data_Byte(FLASH_START_ADD);
+  73   1        if(ResetCount != 0x01)
+  74   1          Default_Settings();
+  75   1        
+  76   1        GlcdImageCnt = Read_Data_Byte(FLASH_QRLEN_HADD)*100 + Read_Data_Byte(FLASH_QRLEN_LADD);
+  77   1        if(GlcdImageCnt>0)
+  78   1        {
+  79   2          for(TmpCnt=0;TmpCnt<GlcdImageCnt;TmpCnt++)
+  80   2          {
+  81   3            QrArray[TmpCnt] = Read_Data_Byte(FLASH_START_IMG_ADD+TmpCnt);
+*** WARNING C214 IN LINE 81 OF Library\StdDriver\src\RDataFlash.c: 'Argument': conversion: non-pointer to pointer
+  82   3          }
+  83   2        }
+  84   1          
+  85   1      }
+  86          
+  87          UINT16 ConvertToUINT16(UINT8 Tenth,UINT8 Unit)
+  88          {
+  89   1        return((Tenth*100)+(Unit));
+  90   1      }
+  91          
+  92          void Default_Settings(void)
+  93          {
+  94   1        GlcdImageCnt=0;
+  95   1        Write_Flash();
+  96   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    520    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      1       6
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

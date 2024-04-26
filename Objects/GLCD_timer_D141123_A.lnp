@@ -1,0 +1,9 @@
+".\Objects\STARTUP.obj",
+".\Objects\Main.obj",
+".\Objects\GLCD.obj",
+".\Objects\uart.obj",
+".\Objects\RGsm_At.obj",
+".\Objects\RDataFlash.obj",
+".\Objects\RTimer0.obj" 
+TO ".\Objects\GLCD_timer_D141123_A" 
+PRINT(".\Listings\GLCD_timer_D141123_A.m51") RAMSIZE(256) 

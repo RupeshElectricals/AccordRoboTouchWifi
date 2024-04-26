@@ -1,0 +1,9 @@
+".\Objects\STARTUP.obj",
+".\Objects\Main.obj",
+".\Objects\GLCD.obj",
+".\Objects\uart.obj",
+".\Objects\RGsm_At.obj",
+".\Objects\RDataFlash.obj",
+".\Objects\RTimer0.obj" 
+TO ".\Objects\RT_UPI_MCU_2101_1V1" 
+PRINT(".\Listings\RT_UPI_MCU_2101_1V1.m51") RAMSIZE(256) 

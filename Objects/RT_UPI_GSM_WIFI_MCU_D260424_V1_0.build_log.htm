@@ -1,0 +1,62 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: µVision V5.27.1.0
+Copyright (C) 2019 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: Rahul Maha, test, LIC=03LZX-HHCRN-PM59K-ZE9FD-DTA5Q-W9309
+ 
+Tool Versions:
+Toolchain:       PK51 Prof. Developers Kit  Version: 9.60.7.0
+Toolchain Path:  C:\Keil_v5\C51\BIN
+C Compiler:      C51.exe V9.60.7.0
+Assembler:       A51.exe V8.2.7.0
+Linker/Locator:  BL51.exe V6.22.4.0
+Library Manager: LIB51.exe V4.30.1.0
+Hex Converter:   OH51.exe V2.7.0.0
+CPU DLL:         S8051.DLL V3.125.1.0
+Dialog DLL:      DP51.DLL V2.69.0.0
+Target DLL:      Nuvoton_8051_Keil_uVision_Driver.dll V3.12
+Dialog DLL:      TP51.DLL V2.60.1.0
+ 
+<h2>Project:</h2>
+D:\PersonalWork\AccordPower\WaterATM_UPI\WaterATM_UPI\Nuvoton\GLCD code_AccordPCB_wifi\GLCD.uvproj
+Project File Date:  04/26/2024
+
+<h2>Output:</h2>
+Rebuild target 'Target 1'
+assembling STARTUP.A51...
+compiling Main.c...
+compiling GLCD.c...
+compiling uart.c...
+compiling RGsm_At.c...
+compiling RDataFlash.c...
+Library\StdDriver\src\RDataFlash.c(81): warning C214: 'Argument': conversion: non-pointer to pointer
+compiling RTimer0.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART_RECEIVE_DATA?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART0_LIRC_BAUDRATE2400_OPEN?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_NW_RESPONCE_HANDLER?RGSM_AT
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_CONVERTTOUINT16?RDATAFLASH
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?TIMERFUNC?RTIMER0
+*** WARNING L15: MULTIPLE CALL TO SEGMENT
+    SEGMENT: ?PR?GLCD_CLEARALL?GLCD
+    CALLER1: ?C_C51STARTUP
+    CALLER2: ?PR?TIMER0_ISR?RTIMER0
+*** WARNING L15: MULTIPLE CALL TO SEGMENT
+    SEGMENT: ?PR?_GLCD_IMAGE?GLCD
+    CALLER1: ?C_C51STARTUP
+    CALLER2: ?PR?TIMER0_ISR?RTIMER0
+Program Size: data=16.0 xdata=1552 code=15819
+creating hex file from ".\Objects\RT_UPI_GSM_WIFI_MCU_D260424_V1_0"...
+".\Objects\RT_UPI_GSM_WIFI_MCU_D260424_V1_0" - 0 Error(s), 8 Warning(s).
+Build Time Elapsed:  00:00:04
+</pre>
+</body>
+</html>

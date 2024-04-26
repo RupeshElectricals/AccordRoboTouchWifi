@@ -1,0 +1,9 @@
+".\Objects\STARTUP.obj",
+".\Objects\Main.obj",
+".\Objects\GLCD.obj",
+".\Objects\uart.obj",
+".\Objects\RGsm_At.obj",
+".\Objects\RDataFlash.obj",
+".\Objects\RTimer0.obj" 
+TO ".\Objects\newGLCD_test_Audio_2101" 
+PRINT(".\Listings\newGLCD_test_Audio_2101.m51") RAMSIZE(256) 

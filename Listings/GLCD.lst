@@ -1,0 +1,314 @@
+C51 COMPILER V9.60.7.0   GLCD                                                              04/26/2024 15:10:37 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE GLCD
+OBJECT MODULE PLACED IN .\Objects\GLCD.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE User_C_Files\GLCD.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Library\Devi
+                    -ce\Include;.\Library\StdDriver\inc;.\Library\User;.\Library\User) DEBUG OBJECTEXTEND PRINT(.\Listings\GLCD.lst) TABS(2) 
+                    -OBJECT(.\Objects\GLCD.obj)
+
+line level    source
+
+   1          #include "ML51.h"
+   2          #include <IO_Define.h>
+   3          
+   4          struct Flag Flags;
+   5          
+   6          UINT8 xdata QrArray[1024];
+   7          extern code char PhonePeLogo[];
+   8          extern code char  paytmlogo [];
+   9          extern code char loading_up [];
+  10          extern code char loading_side [];
+  11          extern code char chair_left[];
+  12          extern code char chair_Right[];
+  13          extern code char Zero [];
+  14          extern code char One [];
+  15          extern code char Two [];
+  16          extern code char Three [];
+  17          extern code char Four [];
+  18          extern code char Five [];
+  19          extern code char Six [];
+  20          extern code char Seven [];
+  21          extern code char Eight [];
+  22          extern code char Nine [];
+  23          extern code char Dot [];
+  24          
+  25          
+  26          extern unsigned int TimerForChair;
+  27          
+  28          
+  29          extern UINT8 LoadingTime;
+  30          extern bit FlagSystemConnected;
+  31          extern bit FlagChairWorking;
+  32          void Delay_1ms(UINT16 mSec)
+  33          {
+  34   1          UINT16 j,t;
+  35   1          for(t=0;t<mSec;t++)
+  36   1          {
+  37   2            for(j=0;j<2124;j++);
+  38   2          }
+  39   1      }
+  40          void GLCD_Command(UINT8 Command)                  /* GLCD command function */
+  41          {
+  42   1        GLCD_LOW_PORT = (Command &0x0F);                          /* Copy command on data pin */  
+  43   1        GLCD_HIGH_PORT = ((Command>>4) &0x0F);
+  44   1        RS = 0;                                       /* Make RS LOW to select command register */
+  45   1        //RW = 0;                                       /* Make RW LOW to select write operation */
+  46   1        EN = 1;                                       /* Make HIGH to LOW transition on Enable pin */
+  47   1        Delay_1ms(1);
+  48   1        EN = 0;                           
+  49   1        Delay_1ms(1);
+  50   1      }
+  51          
+  52          void GLCD_Data(UINT8 Data)                        /* GLCD data function */
+  53          {
+C51 COMPILER V9.60.7.0   GLCD                                                              04/26/2024 15:10:37 PAGE 2   
+
+  54   1        GLCD_LOW_PORT = (Data &0x0F);                           /* Copy data on data pin */
+  55   1        GLCD_HIGH_PORT = ((Data>>4) &0x0F);
+  56   1        RS = 1;                                       /* Make RS HIGH to select data register */
+  57   1        //RW = 0;                                       /* Make RW LOW to select write operation */
+  58   1        EN = 1;                                       /* Make HIGH to LOW transition on Enable pin */
+  59   1        //Delay_1ms(1);
+  60   1        nop;nop;nop;nop;nop;nop;nop;
+  61   1        nop;nop;nop;nop;nop;nop;nop;
+  62   1        nop;nop;nop;nop;nop;nop;nop;
+  63   1        
+  64   1        nop;nop;nop;nop;nop;nop;nop;
+  65   1        nop;nop;nop;nop;nop;nop;nop;
+  66   1        nop;nop;nop;nop;nop;nop;nop;
+  67   1        
+  68   1        nop;nop;nop;nop;nop;nop;nop;
+  69   1        nop;nop;nop;nop;nop;nop;nop;
+  70   1        nop;nop;nop;nop;nop;nop;nop;
+  71   1        
+  72   1        nop;nop;nop;nop;nop;nop;nop;
+  73   1        nop;nop;nop;nop;nop;nop;nop;
+  74   1        nop;nop;nop;nop;nop;nop;nop;
+  75   1        
+  76   1        nop;nop;nop;nop;nop;nop;nop;
+  77   1        nop;nop;nop;nop;nop;nop;nop;
+  78   1        nop;nop;nop;nop;nop;nop;nop;
+  79   1      
+  80   1        EN = 0;
+  81   1        nop;nop;nop;nop;nop;nop;nop;
+  82   1        nop;nop;nop;nop;nop;nop;nop;
+  83   1        nop;nop;nop;nop;nop;nop;nop;
+  84   1        
+  85   1        nop;nop;nop;nop;nop;nop;nop;
+  86   1        nop;nop;nop;nop;nop;nop;nop;
+  87   1        nop;nop;nop;nop;nop;nop;nop;
+  88   1        
+  89   1        nop;nop;nop;nop;nop;nop;nop;
+  90   1        nop;nop;nop;nop;nop;nop;nop;
+  91   1        nop;nop;nop;nop;nop;nop;nop;
+  92   1        
+  93   1        nop;nop;nop;nop;nop;nop;nop;
+  94   1        nop;nop;nop;nop;nop;nop;nop;
+  95   1        nop;nop;nop;nop;nop;nop;nop;
+  96   1        
+  97   1        nop;nop;nop;nop;nop;nop;nop;
+  98   1        nop;nop;nop;nop;nop;nop;nop;
+  99   1        nop;nop;nop;nop;nop;nop;nop;
+ 100   1        //Delay_1ms(1);
+ 101   1        
+ 102   1      }
+ 103          
+ 104          void GLCD_Init()                                /* GLCD initialize function */
+ 105          {
+ 106   1        CS1(1); CS2=1;                              /* Select both left & right half of display */
+ 107   1        RST(1);                                     /* Keep reset pin high */
+ 108   1        Delay_1ms(2000);
+ 109   1        GLCD_Command(0x3E);                           /* Display OFF */
+ 110   1        GLCD_Command(0x40);                           /* Set Y address (column=0) */
+ 111   1        GLCD_Command(0xB8);                           /* Set x address (page=0) */
+ 112   1        GLCD_Command(0xC0);                           /* Set z address (start line=0) */
+ 113   1        GLCD_Command(0x3F);                           /* Display ON */
+ 114   1      }
+ 115          
+C51 COMPILER V9.60.7.0   GLCD                                                              04/26/2024 15:10:37 PAGE 3   
+
+ 116          void GLCD_ClearAll()                            /* GLCD all display clear function */
+ 117          {
+ 118   1        int i,j;
+ 119   1        CS1(1); CS2=1;                              /* Select both left & right half of display */
+ 120   1        for(i=0;i<8;i++)
+ 121   1        {
+ 122   2          GLCD_Command((0xB8)+i);                     /* Increment page each time after 64 column */
+ 123   2          for(j=0;j<64;j++)
+ 124   2          {
+ 125   3            GLCD_Data(0x00);                              /* Write zeros to all 64 column */
+ 126   3          }
+ 127   2        }
+ 128   1        GLCD_Command(0x40);                           /* Set Y address (column=0) */
+ 129   1        GLCD_Command(0xB8);                           /* Set x address (page=0) */
+ 130   1      }
+ 131          
+ 132          void GLCD_SetCursor(UINT8 x,UINT8 y,UINT8 Page)  //X(0-63),Y(0-7),Page(0/1)
+ 133          {
+ 134   1        CS1(!Page); CS2=Page;
+ 135   1        GLCD_Command(0x40+x);
+ 136   1        GLCD_Command(0xB8+y);
+ 137   1      }
+ 138          
+ 139          void GLCD_Image(UINT8 x,UINT8 y,UINT8 StartPage, UINT8 *Image,UINT8 ImageX,UINT8 ImageY)
+ 140          {
+ 141   1        UINT8 GlcdX=x,GlcdY=y;
+ 142   1        UINT8 ImageLenX=0,ImageLenY=0;
+ 143   1        UINT8 Lines=ImageY/8;
+ 144   1        UINT16 k=0;
+ 145   1        
+ 146   1        GLCD_SetCursor(x,y,StartPage);
+ 147   1        for(ImageLenY=y;ImageLenY<Lines+y;ImageLenY++)
+ 148   1        {
+ 149   2          GLCD_SetCursor(x,ImageLenY,StartPage);
+ 150   2          for(ImageLenX=x;ImageLenX<ImageX+x;ImageLenX++)
+ 151   2          {
+ 152   3            GLCD_Data(Image[k]);k++;
+ 153   3            if(ImageLenX==63)
+ 154   3            {GLCD_SetCursor(0,ImageLenY,StartPage+1);
+ 155   4              CS1(0); CS2=1;
+ 156   4            }
+ 157   3          }
+ 158   2        }
+ 159   1      }
+ 160          
+ 161          void QrScreen(void)
+ 162          {
+ 163   1        if(FlagSystemConnected==1 && Flags.RunnigScreen!=QrScr)
+ 164   1        {
+ 165   2        GLCD_ClearAll();
+ 166   2        GLCD_Image(32,0,0, QrArray,64,64);}
+ 167   1        Flags.RunnigScreen=QrScr;
+ 168   1      //  GLCD_Image(10,0,1, PhonePeLogo,32,32);
+ 169   1      //  GLCD_Image(0,4,1, paytmlogo,64,32);
+ 170   1        
+ 171   1      }
+ 172          void LoadingScreen(void)
+ 173          {
+ 174   1        if((FlagSystemConnected==0) && (FlagChairWorking==0) && (TimerForChair==0))
+ 175   1        {
+ 176   2          Flags.RunnigScreen=LoadingScr;
+ 177   2        if(LoadingTime%2==0)
+C51 COMPILER V9.60.7.0   GLCD                                                              04/26/2024 15:10:37 PAGE 4   
+
+ 178   2            {
+ 179   3              GLCD_ClearAll();
+ 180   3              GLCD_Image(45,0,0, loading_up,35,64);
+ 181   3            }
+ 182   2            else
+ 183   2            {
+ 184   3            GLCD_ClearAll();
+ 185   3            GLCD_Image(32,2,0, loading_side,64,35);
+ 186   3            }
+ 187   2        }
+ 188   1      }
+ 189          
+ 190          void ChairAnimation(void)
+ 191          {
+ 192   1        if(Flags.RunnigScreen!=ChairScr)
+ 193   1        {
+ 194   2        Flags.RunnigScreen=ChairScr;
+ 195   2      //  if(TimerForChair>0)
+ 196   2      //        {
+ 197   2      //          if(TimerForChair%2==0)
+ 198   2      //            GLCD_Image(24,0,0, chair_left,80,64);
+ 199   2      //          else
+ 200   2                  GLCD_ClearAll();
+ 201   2                  GLCD_Image(24,0,0, chair_Right,80,64);
+ 202   2      //        }
+ 203   2        }
+ 204   1      }
+ 205          
+ 206          void ShowRemainigTime(UINT16 Time)
+ 207          {
+ 208   1        UINT8 x,y,page, tempcnt=0;
+ 209   1        UINT16 Min,Sec;
+ 210   1        UINT8 Min1,Min2,Sec1,Sec2;
+ 211   1        Min=Time/60;
+ 212   1        Min1=Min/10;
+ 213   1        Min2=Min%10;
+ 214   1        Sec=Time%60;
+ 215   1        Sec1=Sec/10;
+ 216   1        Sec2=Sec%10;
+ 217   1        Flags.RunnigScreen=TimerScr;
+ 218   1        Again:
+ 219   1         x=32*tempcnt;
+ 220   1         y=2;
+ 221   1         page=tempcnt/2;
+ 222   1          
+ 223   1          switch(tempcnt)
+ 224   1          {
+ 225   2            case 0:
+ 226   2              DisplayNum(0,y,page,Min1);
+ 227   2              break;
+ 228   2            case 1:
+ 229   2              DisplayNum(30,y,page,Min2);
+ 230   2              GLCD_Image(60,y,page,Dot ,8,48);
+ 231   2              break;    
+ 232   2            case 2:
+ 233   2              DisplayNum(4,y,page,Sec1);
+ 234   2              break;
+ 235   2            case 3:
+ 236   2              DisplayNum(34,y,page,Sec2);
+ 237   2              break;              
+ 238   2          }
+ 239   1          tempcnt++;
+C51 COMPILER V9.60.7.0   GLCD                                                              04/26/2024 15:10:37 PAGE 5   
+
+ 240   1          if(tempcnt<4)
+ 241   1            goto Again;
+ 242   1          
+ 243   1      }
+ 244          
+ 245          void DisplayNum(UINT8 x,UINT8 y,UINT8 Page,UINT8 Num)
+ 246          {
+ 247   1        switch(Num)
+ 248   1        {
+ 249   2          case 0:
+ 250   2            GLCD_Image(x,y,Page,Zero ,30,48);
+ 251   2            break;
+ 252   2          case 1:
+ 253   2            GLCD_Image(x,y,Page,One ,30,48);
+ 254   2            break;
+ 255   2          case 2:
+ 256   2            GLCD_Image(x,y,Page,Two ,30,48);
+ 257   2            break;
+ 258   2          case 3:
+ 259   2            GLCD_Image(x,y,Page,Three ,30,48);
+ 260   2            break;
+ 261   2          case 4:
+ 262   2            GLCD_Image(x,y,Page,Four ,30,48);
+ 263   2            break;
+ 264   2          case 5:
+ 265   2            GLCD_Image(x,y,Page,Five ,30,48);
+ 266   2            break;
+ 267   2          case 6:
+ 268   2            GLCD_Image(x,y,Page,Six ,30,48);
+ 269   2            break;
+ 270   2          case 7:
+ 271   2            GLCD_Image(x,y,Page,Seven ,30,48);
+ 272   2            break;
+ 273   2          case 8:
+ 274   2            GLCD_Image(x,y,Page,Eight ,30,48);
+ 275   2            break;
+ 276   2          case 9:
+ 277   2            GLCD_Image(x,y,Page,Nine ,30,48);
+ 278   2            break;
+ 279   2          
+ 280   2        }
+ 281   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1489    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   1031      31
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

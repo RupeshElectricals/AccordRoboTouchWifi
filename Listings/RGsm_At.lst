@@ -1,0 +1,294 @@
+C51 COMPILER V9.60.7.0   RGSM_AT                                                           04/26/2024 15:10:38 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE RGSM_AT
+OBJECT MODULE PLACED IN .\Objects\RGsm_At.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE Library\StdDriver\src\RGsm_At.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\
+                    -Library\Device\Include;.\Library\StdDriver\inc;.\Library\User;.\Library\User) DEBUG OBJECTEXTEND PRINT(.\Listings\RGsm_A
+                    -t.lst) TABS(2) OBJECT(.\Objects\RGsm_At.obj)
+
+line level    source
+
+   1          #include "ML51.h"
+   2          #include "RTimer0.h"
+   3          bit FlagSystemConnected=0;
+   4          bit FlagChairWorking=0;
+   5          bit FlagChairlastMin=0;
+   6          bit FlagStopAud=0;
+   7          bit FlagOffAud=0;
+   8          UINT8 OffTime=0;
+   9          extern bit BIT_TMP; 
+  10          // UART.c
+  11          extern UINT8 xdata UartRecBuff[MAX_UART_LINE][MAX_UART_DATA],UartTempRecBuff[ ];
+  12          extern UINT8 UartRecFlag,UartRecCount;
+  13          extern UINT8 UartLine;
+  14          extern UINT8 UartStarRec;
+  15          
+  16          extern UINT16 xdata GlcdImageCnt;
+  17          extern UINT8 GlcdUartRec;
+  18          extern UINT8 xdata QrArray[];
+  19          
+  20          extern struct Flag Flags;
+  21          extern code char PhonePeLogo[];
+  22          extern code char  paytmlogo [];
+  23          
+  24          extern UINT8 PreStartTime;
+  25          
+  26          UINT8 PreUartLine=0;
+  27          UINT8 SMSRecFlag=0;
+  28          
+  29          
+  30          int TimerForChair=0;
+  31          code UINT8 CREG[] = "+CREG:";
+  32          code UINT8 GLCD_IMG_START[] = "IMG_START:";
+  33          code UINT8 GLCD_IMG_END[] = "IMG_STOP";
+  34          code UINT8 MCU_TIME[] = "TIME:";
+  35          code UINT8 PID_RECV[] = "*PID:";
+  36          code UINT8 MQTT_CONNECT[] = "MQTT_CONN";
+  37          code UINT8 MQTT_DISCONNECT[] = "MQTT_DISCONN";
+  38          code UINT8 GET_PID[] = "GET_PID";
+  39          xdata UINT8 PidArray[15];
+  40          xdata char etxt[200]; /* text buffer */
+  41          
+  42          void DebugPrintf (char *fmt, ...) {
+  43   1        va_list arg_ptr;
+  44   1        va_start (arg_ptr, fmt); /* format string */
+  45   1        vsprintf (etxt, fmt, arg_ptr);
+  46   1        va_end (arg_ptr);
+  47   1        UART_Send_String(DEBUG_UART,etxt);
+  48   1        
+  49   1      }
+  50          
+  51          
+  52          void NW_Responce_Handler(UINT8 *Line,void * UserData)
+  53          {
+C51 COMPILER V9.60.7.0   RGSM_AT                                                           04/26/2024 15:10:38 PAGE 2   
+
+  54   1        UART_Send_String(DEBUG_UART,Line);
+  55   1        if(strstr(Line,"+CREG: ") && strstr(Line,","))
+  56   1          sscanf( Line, "+CREG: %d,%d %*[^\r\n]\r\n", UserData,UserData);
+  57   1        else  if(strstr(Line,"+CREG:"))
+  58   1          sscanf( Line, "+CREG: %d %*[^\r\n]\r\n", UserData);  
+  59   1      }
+  60          
+  61          
+  62          void CheckUrc(void)
+  63          {
+  64   1          while(PreUartLine!=UartLine)
+  65   1          {
+  66   2            PreUartLine++;
+  67   2            //UART_Send_String(DEBUG_UART,UartRecBuff[PreUartLine-1]);
+  68   2            
+  69   2            DebugPrintf("<*****URC = %s @UARTNO:%d",UartRecBuff[PreUartLine-1],Flags.UartNo);
+  70   2             //UART_Send_String(GSM_UART,UartRecBuff[PreUartLine-1]);
+  71   2            
+  72   2            //------------------------------------------------------------------------------------------//
+  73   2      //      if(strstr(UartRecBuff[PreUartLine-1],RING))         // RING NOTIFICATION
+  74   2      //      {
+  75   2      //        //  SendAtCmd("ATA\r\n",AT_RESP,0,0);
+  76   2      //         // Flags.CallState = INCOMMING;
+  77   2      //        //  DebugPrintf("<------DEBUG MSG => Flags.CallState = %d---------\r\n",Flags.CallState);
+  78   2      //          SendAtCmd("AT+CLCC\r\n",CLCC_RESP,&MOB_NO,1000);
+  79   2      //          UART_Send_String(DEBUG_UART,MOB_NO);
+  80   2      //         if(strstr(MOB_NO,"8600687322"))
+  81   2      //         {
+  82   2      //           SendAtCmd("ATA\r\n",AT_RESP,0,0);
+  83   2      //           Flags.CallState = INCOMMING;
+  84   2      //           DebugPrintf("<------DEBUG MSG => Flags.CallState = %d---------\r\n",Flags.CallState);
+  85   2      //         }
+  86   2      //        
+  87   2      //          
+  88   2      //      }
+  89   2            //------------------------------------------------------------------------------------------//
+  90   2          
+  91   2            
+  92   2            
+  93   2      //      //------------------------------------------------------------------------------------------//
+  94   2      //      if(strstr(UartRecBuff[PreUartLine-1],CREG))         // CREG N/W NOTIFICATION
+  95   2      //      {
+  96   2      //        Responce_Handler(NW_RESP,UartRecBuff[PreUartLine-1],&Flags.NwReg);
+  97   2      //        DebugPrintf("<------DEBUG MSG => Flags.NwReg = %d---------\r\n",Flags.NwReg);
+  98   2      //      }
+  99   2      //      
+ 100   2            
+ 101   2            
+ 102   2             if(strstr(UartRecBuff[PreUartLine-1],GLCD_IMG_START))
+ 103   2             {
+ 104   3               Flags.GlcdImgStart=1;
+ 105   3               GlcdUartRec=0;
+ 106   3               GlcdImageCnt=0;
+ 107   3               
+ 108   3               memset(QrArray,0x00,1024);
+ 109   3               TIMER0_INTR_DIS;
+ 110   3             }
+ 111   2             
+ 112   2             if(strstr(UartRecBuff[PreUartLine-1],GLCD_IMG_END))
+ 113   2             {
+ 114   3               QrArray[GlcdImageCnt]='\0';
+ 115   3               Flags.GlcdImgStart=0;
+C51 COMPILER V9.60.7.0   RGSM_AT                                                           04/26/2024 15:10:38 PAGE 3   
+
+ 116   3               GlcdUartRec=0;
+ 117   3               
+ 118   3               //GLCD_ClearAll();
+ 119   3              
+ 120   3               WriteFlashQr(GlcdImageCnt);
+ 121   3               Write_Flash();
+ 122   3               memset(QrArray,0x00,1024);
+ 123   3               ReadFlash();
+ 124   3               //QrScreen();
+ 125   3               
+ 126   3               //GLCD_Image(0,0,0, QrArray,64,64);
+ 127   3               
+ 128   3               //Delay_1ms(1000);
+ 129   3               //GLCD_Image(10,0,1, PhonePeLogo,32,32);
+ 130   3               //GLCD_Image(0,4,1, paytmlogo,64,32);
+ 131   3               
+ 132   3               
+ 133   3               
+ 134   3               
+ 135   3               Delay_1ms(2000);
+ 136   3               
+ 137   3               if(Flags.UartNo==1)
+ 138   3               {
+ 139   4                 UART_Send_String(WIFI_UART,"IMG_RECV\n");
+ 140   4                 Delay_1ms(2000);
+ 141   4                 UART_Send_String(WIFI_UART,"IMG_RECV\n");
+ 142   4                 DebugPrintf("img receive from wifi");
+ 143   4               }
+ 144   3               else
+ 145   3              {
+ 146   4                 UART_Send_String(GSM_UART,"IMG_RECV\r\n");
+ 147   4                 Delay_1ms(2000);
+ 148   4                 UART_Send_String(GSM_UART,"IMG_RECV\r\n");
+ 149   4                 DebugPrintf("img receive from GSM");
+ 150   4               }
+ 151   3              TIMER0_INTR_EN;  
+ 152   3               
+ 153   3               //set_CHPCON_SWRST;
+ 154   3               //GlcdImageCnt`=0;
+ 155   3             }
+ 156   2             
+ 157   2             
+ 158   2              if(strstr(UartRecBuff[PreUartLine-1],MQTT_CONNECT))
+ 159   2             {
+ 160   3               FlagSystemConnected=1;
+ 161   3               if(TimerForChair==0)
+ 162   3               {
+ 163   4                 
+ 164   4               TIMER0_INTR_DIS;  
+ 165   4               FlagSystemConnected=1;
+ 166   4              
+ 167   4               QrScreen();
+ 168   4               Delay_1ms(1000);
+ 169   4               TIMER0_INTR_EN;   
+ 170   4               }
+ 171   3               
+ 172   3             }
+ 173   2             
+ 174   2             if(strstr(UartRecBuff[PreUartLine-1],MQTT_DISCONNECT))
+ 175   2             {
+ 176   3               FlagSystemConnected=0;
+ 177   3               if(TimerForChair==0 && Flags.RunnigScreen!=LoadingScr && FlagChairWorking==0)
+C51 COMPILER V9.60.7.0   RGSM_AT                                                           04/26/2024 15:10:38 PAGE 4   
+
+ 178   3               {
+ 179   4                GLCD_ClearAll();
+ 180   4                // TIMER0_INTR_EN;  
+ 181   4               }
+ 182   3              // QrScreen();
+ 183   3               
+ 184   3             }
+ 185   2             
+ 186   2              if(strstr(UartRecBuff[PreUartLine-1],GET_PID)&& (Flags.PidReceived==1))
+ 187   2             {
+ 188   3        //       TIMER0_INTR_DIS;  
+ 189   3      //        memset(PidArray,0x00,15);
+ 190   3      //        strcpy(PidArray,UartRecBuff[PreUartLine-1]);
+ 191   3      //        PidArray[11]='\0';
+ 192   3      //        PidArray[12]='\0';
+ 193   3            
+ 194   3              UART_Send_String(WIFI_UART,PidArray);
+ 195   3              //UART_Send_String(WIFI_UART,"\n");
+ 196   3            //  UART_Send_String(WIFI_UART,"\n"); 
+ 197   3              Flags.PidReceived=1;
+ 198   3              //DebugPrintf("\r\n-- PID REQUEST=%s--\r\n",PidArray);
+ 199   3               DebugPrintf("<------PID REQUEST = %s,%d---------\r\n",PidArray,strlen(PidArray)); 
+ 200   3        //       TIMER0_INTR_EN;   
+ 201   3             }
+ 202   2             
+ 203   2             if(strstr(UartRecBuff[PreUartLine-1],MCU_TIME))
+ 204   2             {
+ 205   3                DebugPrintf("\r\n-- uart rec %s--\r\n",UartRecBuff[PreUartLine-1]);
+ 206   3                sscanf(UartRecBuff[PreUartLine-1],"TIME:%d\r\n", &TimerForChair);
+ 207   3                if(TimerForChair>0)
+ 208   3                {
+ 209   4                  //TimerForChair = 1;
+ 210   4                  PreStartTime  = PRE_START_TIME;
+ 211   4                  TimerForChair = (TimerForChair*60);
+ 212   4                  //TimerForChair = (1*10);
+ 213   4                  FlagChairWorking = 1;
+ 214   4                  GLCD_ClearAll();
+ 215   4                  ChairAnimation();
+ 216   4                //  GLCD_Image(24,0,0, chair_left,80,64);
+ 217   4                //  RELAY = RELAY_ON;
+ 218   4                }
+ 219   3                DebugPrintf("<------timer value = %d---------\r\n",TimerForChair);
+ 220   3             }
+ 221   2             
+ 222   2             if(strstr(UartRecBuff[PreUartLine-1],PID_RECV))
+ 223   2             {
+ 224   3            //  TIMER0_INTR_DIS;    
+ 225   3              memset(PidArray,0x00,15);
+ 226   3              //for(k=0;k<11;k++) 
+ 227   3              strcpy(PidArray,UartRecBuff[PreUartLine-1]);
+ 228   3              PidArray[11]='\n';
+ 229   3              PidArray[12]='\0';         
+ 230   3              DebugPrintf("<------PidArray = %s,%d---------\r\n",PidArray,strlen(PidArray)); 
+ 231   3              
+ 232   3              Flags.PidReceived=1;
+ 233   3               
+ 234   3                
+ 235   3                //------UART 1 INIT-----------//  WIFI
+ 236   3      //          if(P14==1)
+ 237   3      //          {
+ 238   3      //          UART_Open(24000000,UART1_Timer3,9600); 
+ 239   3      //          UART_Interrupt_Enable(UART1,Enable);
+C51 COMPILER V9.60.7.0   RGSM_AT                                                           04/26/2024 15:10:38 PAGE 5   
+
+ 240   3      //          }
+ 241   3      //          //else
+ 242   3      //          //  UART_Interrupt_Enable(UART1,Disable); 
+ 243   3            //TIMER0_INTR_EN;    
+ 244   3             }
+ 245   2            ClearUart();
+ 246   2          DebugPrintf("<------DEBUG MSG => UARTLINE EXIT = %d---------\r\n",(int*)UartLine);
+ 247   2          }
+ 248   1          
+ 249   1      }
+ 250          
+ 251          void ClearUart(void)
+ 252          {
+ 253   1        PreUartLine=UartLine=0; 
+ 254   1        UartStarRec=0;  
+ 255   1        Flags.UartNo=0;
+ 256   1        memset(UartRecBuff[0],'\0',50);
+ 257   1        memset(UartRecBuff[1],'\0',50);
+ 258   1      }
+ 259          
+ 260          
+ 261          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1306    ----
+   CONSTANT SIZE    =    409    ----
+   XDATA SIZE       =    220      52
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      5    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

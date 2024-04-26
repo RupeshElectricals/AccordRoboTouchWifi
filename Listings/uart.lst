@@ -1,0 +1,562 @@
+C51 COMPILER V9.60.7.0   UART                                                              04/26/2024 15:10:37 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE UART
+OBJECT MODULE PLACED IN .\Objects\uart.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE Library\StdDriver\src\uart.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Lib
+                    -rary\Device\Include;.\Library\StdDriver\inc;.\Library\User;.\Library\User) DEBUG OBJECTEXTEND PRINT(.\Listings\uart.lst)
+                    - TABS(2) OBJECT(.\Objects\uart.obj)
+
+line level    source
+
+   1          /*--------------------------------------------------------------------------------------------------------
+             --*/
+   2          /*                                                                                                        
+             - */
+   3          /* Copyright(c) 2019 Nuvoton Technology Corp. All rights reserved.                                        
+             - */
+   4          /*                                                                                                        
+             - */
+   5          /*--------------------------------------------------------------------------------------------------------
+             --*/
+   6          
+   7          //********************************************************************************************************
+             -***
+   8          //  Nuvoton Technoledge Corp. 
+   9          //  Website: http://www.nuvoton.com
+  10          //  E-Mail : MicroC-8bit@nuvoton.com
+  11          //  Date   : Apr/21/2019
+  12          //********************************************************************************************************
+             -***
+  13          
+  14          #include "ML51.h"
+  15          
+  16          
+  17          UINT8 xdata UartRecBuff[MAX_UART_LINE][MAX_UART_DATA],UartTempRecBuff[MAX_UART_DATA];
+  18          UINT8 UartRecFlag=0,UartRecCount=0;
+  19          UINT8 UartLine =0;
+  20          UINT8 UartStarRec=0;
+  21          
+  22          UINT16 xdata GlcdImageCnt=0;
+  23          UINT8 xdata GlcdImgRecArray[10];
+  24          UINT8 GlcdUartRec=0;
+  25          volatile UINT8 TxTOut=0;
+  26          
+  27          extern struct Flag Flags;
+  28          extern UINT8 xdata QrArray[];
+  29          
+  30          void SerialPort1_ISR(void) interrupt 15
+  31          {
+  32   1        unsigned char uart_receive_data = 0;
+  33   1           PUSH_SFRS;
+  34   1          if ((RI_1))
+  35   1          {
+  36   2            UARTDataRec(SBUF1);
+  37   2            RI_1=0;     
+  38   2            Flags.UartNo=1; 
+  39   2          }
+  40   1          if (TI_1)
+  41   1          {       
+  42   2              TI_1 = 0;                                         // Clear TI (Transmit Interrupt).
+  43   2          }
+  44   1          
+  45   1             POP_SFRS;
+  46   1      }     
+C51 COMPILER V9.60.7.0   UART                                                              04/26/2024 15:10:37 PAGE 2   
+
+  47          
+  48          
+  49          
+  50          void Serial_ISR (void) interrupt 4 
+  51          {
+  52   1        unsigned char uart_receive_data = 0;
+  53   1        
+  54   1          if ((RI))
+  55   1          {   
+  56   2             // receiveFlag = 1;
+  57   2      //        UartTempRecBuff[UartRecCount] = SBUF;
+  58   2      //         UartRecCount++;
+  59   2      //      
+  60   2      //      
+  61   2      //      if( (UartTempRecBuff[UartRecCount-1] == 0x0A))// || UartRecCount>48)
+  62   2      //      {
+  63   2      //          if(UartStarRec==1)
+  64   2      //          {
+  65   2      //            UartTempRecBuff[UartRecCount]='\0';
+  66   2      //            strcpy(UartRecBuff[UartLine],UartTempRecBuff);
+  67   2      //            UartRecCount=0;
+  68   2      //            if(UartLine<(MAX_UART_LINE-1))
+  69   2      //            UartLine++;
+  70   2      //            else
+  71   2      //              UartLine=0;
+  72   2      //            UartRecFlag = 1;
+  73   2      //            memset(UartTempRecBuff,'\0',MAX_UART_DATA);
+  74   2      //          }
+  75   2      //        else if((UartStarRec==0))// && (UartRecFlag==0))
+  76   2      //        {
+  77   2      //          UartStarRec = 1;
+  78   2      //          UartRecCount=0;
+  79   2      //        } 
+  80   2      //      }
+  81   2      //      
+  82   2      //      
+  83   2      //      if(Flags.GlcdImgStart==1)
+  84   2      //      {
+  85   2      //        if((UartTempRecBuff[UartRecCount-1]>='0') && (UartTempRecBuff[UartRecCount-1]<='9'))
+  86   2      //        {
+  87   2      //          GlcdImgRecArray[GlcdUartRec] =UartTempRecBuff[UartRecCount-1]&0x0F;
+  88   2      //          GlcdUartRec++;
+  89   2      //        }
+  90   2      //        else if((UartTempRecBuff[UartRecCount-1]>='A') && (UartTempRecBuff[UartRecCount-1]<='F'))
+  91   2      //        {
+  92   2      //          GlcdImgRecArray[GlcdUartRec]=(UartTempRecBuff[UartRecCount-1]&0x0F)+0X09;
+  93   2      //          GlcdUartRec++;
+  94   2      //        }
+  95   2      //        
+  96   2      //        if(GlcdUartRec==2)
+  97   2      //        {
+  98   2      //          QrArray[GlcdImageCnt]=(GlcdImgRecArray[GlcdUartRec-1]) | GlcdImgRecArray[GlcdUartRec-2]<<4;
+  99   2      //          GlcdImageCnt++;
+ 100   2      //          GlcdUartRec=0;
+ 101   2      //          UartRecCount=0;
+ 102   2      //        } 
+ 103   2      //      }
+ 104   2      //      
+ 105   2      //      
+ 106   2      //      if(UartRecCount>(MAX_UART_DATA-2))
+ 107   2      //      {
+ 108   2      //        UartTempRecBuff[UartRecCount]='\0';
+C51 COMPILER V9.60.7.0   UART                                                              04/26/2024 15:10:37 PAGE 3   
+
+ 109   2      //        strcpy(UartRecBuff[UartLine],UartTempRecBuff);
+ 110   2      //        if(UartLine<(MAX_UART_LINE-1))
+ 111   2      //            UartLine++;
+ 112   2      //        else
+ 113   2      //            UartLine=0;
+ 114   2      //        UartRecCount=0;
+ 115   2      //        memset(UartTempRecBuff,'\0',MAX_UART_DATA);
+ 116   2      //      }
+ 117   2            
+ 118   2            
+ 119   2            
+ 120   2            UARTDataRec(SBUF);
+ 121   2            Flags.UartNo=0;   
+ 122   2            
+ 123   2            
+ 124   2          //  Next:
+ 125   2            clr_SCON_RI;  
+ 126   2            
+ 127   2          }
+ 128   1          if (TI)
+ 129   1          {       
+ 130   2              clr_SCON_TI;                                         // Clear TI (Transmit Interrupt).
+ 131   2          }
+ 132   1      }
+ 133          
+ 134          
+ 135          
+ 136          void UARTDataRec(char RecByte)
+ 137          {
+ 138   1         UartTempRecBuff[UartRecCount] = RecByte;
+ 139   1               UartRecCount++;
+ 140   1            
+ 141   1            
+ 142   1            if( (UartTempRecBuff[UartRecCount-1] == 0x0A))// || UartRecCount>48)
+ 143   1            {
+ 144   2                if(UartStarRec==1)
+ 145   2                {
+ 146   3                  UartTempRecBuff[UartRecCount]='\0';
+ 147   3                  strcpy(UartRecBuff[UartLine],UartTempRecBuff);
+ 148   3                  UartRecCount=0;
+ 149   3                  if(UartLine<(MAX_UART_LINE-1))
+ 150   3                  UartLine++;
+ 151   3                  else
+ 152   3                    UartLine=0;
+ 153   3                  UartRecFlag = 1;
+ 154   3                  memset(UartTempRecBuff,'\0',MAX_UART_DATA);
+ 155   3                }
+ 156   2              else if((UartStarRec==0))// && (UartRecFlag==0))
+ 157   2              {
+ 158   3                UartStarRec = 1;
+ 159   3                UartRecCount=0;
+ 160   3              } 
+ 161   2            }
+ 162   1            
+ 163   1            
+ 164   1            if(Flags.GlcdImgStart==1)
+ 165   1            {
+ 166   2              if((UartTempRecBuff[UartRecCount-1]>='0') && (UartTempRecBuff[UartRecCount-1]<='9'))
+ 167   2              {
+ 168   3                GlcdImgRecArray[GlcdUartRec] =UartTempRecBuff[UartRecCount-1]&0x0F;
+ 169   3                GlcdUartRec++;
+ 170   3              }
+C51 COMPILER V9.60.7.0   UART                                                              04/26/2024 15:10:37 PAGE 4   
+
+ 171   2              else if((UartTempRecBuff[UartRecCount-1]>='A') && (UartTempRecBuff[UartRecCount-1]<='F'))
+ 172   2              {
+ 173   3                GlcdImgRecArray[GlcdUartRec]=(UartTempRecBuff[UartRecCount-1]&0x0F)+0X09;
+ 174   3                GlcdUartRec++;
+ 175   3              }
+ 176   2              
+ 177   2              if(GlcdUartRec==2)
+ 178   2              {
+ 179   3                QrArray[GlcdImageCnt]=(GlcdImgRecArray[GlcdUartRec-1]) | GlcdImgRecArray[GlcdUartRec-2]<<4;
+ 180   3                GlcdImageCnt++;
+ 181   3                GlcdUartRec=0;
+ 182   3                UartRecCount=0;
+ 183   3              } 
+ 184   2            }
+ 185   1            
+ 186   1            
+ 187   1            if(UartRecCount>(MAX_UART_DATA-2))
+ 188   1            {
+ 189   2              UartTempRecBuff[UartRecCount]='\0';
+ 190   2              strcpy(UartRecBuff[UartLine],UartTempRecBuff);
+ 191   2              if(UartLine<(MAX_UART_LINE-1))
+ 192   2                  UartLine++;
+ 193   2              else
+ 194   2                  UartLine=0;
+ 195   2              UartRecCount=0;
+ 196   2              memset(UartTempRecBuff,'\0',MAX_UART_DATA);
+ 197   2            }
+ 198   1            
+ 199   1            
+ 200   1            
+ 201   1      }
+ 202          
+ 203          
+ 204          
+ 205          
+ 206          
+ 207          /**
+ 208           * @brief       UART no interrupt enable setting 
+ 209           * @param       UART0~3, baudrate value
+ 210           * @return      none
+ 211           * @details     none
+ 212           * @note        max baud rate = 1.5MHz when Fsys = 24MHz
+ 213           */
+ 214          //********************************************************************************************************
+             -********  
+ 215          //**** UART Enable Setting  
+ 216          //**** 1. Define Fsys value(value)
+ 217          //**** 2. Select UART port(UART0_Timer1 / UART0_Timer3 / UART1_Timer3 / UART2/UART3) 
+ 218          //**** 3. Define baudrate (value)
+ 219          //**** For example: UART_Open(24000000,UART0_Timer1,115200)
+ 220          void UART_Open(unsigned long u32SysClock, unsigned char u8UARTPort,unsigned long u32Baudrate)
+ 221          {
+ 222   1        switch(u8UARTPort)
+ 223   1        {
+ 224   2            case UART0_Timer1:
+ 225   2            case UART0:
+ 226   2                SFRS = 0x00;
+ 227   2                SCON = 0x50;             /*UART0 Mode1,REN=1,TI=1 */
+ 228   2                TMOD |= 0x20;            /*Timer1 Mode1*/
+ 229   2                set_PCON_SMOD;          /*UART0 Double Rate Enable*/
+ 230   2                set_CKCON_T1M;
+ 231   2                clr_T3CON_BRCK;          /*Serial port 0 baud rate clock source = Timer1*/
+C51 COMPILER V9.60.7.0   UART                                                              04/26/2024 15:10:37 PAGE 5   
+
+ 232   2                TH1 = 256 - (u32SysClock/16/u32Baudrate);
+ 233   2                set_TCON_TR1;
+ 234   2            break;
+ 235   2            case UART0_Timer3:
+ 236   2                SFRS = 0x00;
+ 237   2                SCON = 0x50;            /*UART0 Mode1,REN=1,TI=1*/
+ 238   2                set_PCON_SMOD;          /*UART0 Double Rate Enable*/
+ 239   2                T3CON &= 0xF8;           /*T3PS2=0,T3PS1=0,T3PS0=0(Prescale=1)*/
+ 240   2                set_T3CON_BRCK;          /*UART0 baud rate clock source = Timer3*/
+ 241   2                RH3    = HIBYTE(65536 - (u32SysClock/16/u32Baudrate));
+ 242   2                RL3    = LOBYTE(65536 - (u32SysClock/16/u32Baudrate));
+ 243   2                set_T3CON_TR3;          /*Trigger Timer3*/
+ 244   2            break;
+ 245   2            case UART1_Timer3:
+ 246   2            case UART1:
+ 247   2                SFRS = 0x00;
+ 248   2                S1CON = 0x50;           /*UART1 Mode1,REN_1=1 */
+ 249   2                T3CON = 0x88;           /*T3PS2=0,T3PS1=0,T3PS0=0(Prescale=1), UART1 in MODE 1*/
+ 250   2                RH3    = HIBYTE(65536 - (u32SysClock/16/u32Baudrate));
+ 251   2                RL3    = LOBYTE(65536 - (u32SysClock/16/u32Baudrate));
+ 252   2                set_T3CON_TR3;             //Trigger Timer3                                                     
+             -        
+ 253   2            break; 
+ 254   2            case UART2:
+ 255   2                set_SC0CR0_SCEN;         /* Enable SC module */
+ 256   2                set_SC0CR1_UARTEN;       /* set as UART mode */
+ 257   2                set_SC0CR1_CLKKEEP;      
+ 258   2                clr_SC0CR0_CONSEL;       /* clr CONSEL and AUTOCEN*/
+ 259   2                clr_SC0CR0_AUTOCEN;
+ 260   2                SC0ETURD0 = LOBYTE(u32SysClock/8/u32Baudrate-1);  /* define baud rate low byte */
+ 261   2                SC0ETURD1 &= 0xF0;                                /* define baud rate high byte */
+ 262   2                SC0ETURD1 |= (HIBYTE(u32SysClock/8/u32Baudrate-1))&0x0F; 
+ 263   2                set_SC0CR1_PBOFF;     //parity bit disable
+ 264   2                SC0CR1&=0XCF;        //datalegth 8bit
+ 265   2                set_SC0CR0_NSB;      //stop bit = 1bit
+ 266   2            break;  
+ 267   2            case UART3:
+ 268   2                set_SC0CR1_UARTEN;
+ 269   2                clr_SC0CR0_CONSEL;
+ 270   2                clr_SC0CR0_AUTOCEN;
+ 271   2                SC0ETURD0 = LOBYTE(u32SysClock/u32Baudrate-1);
+ 272   2                SC0ETURD1 = HIBYTE(u32SysClock/u32Baudrate-1)&0x0F;
+ 273   2                set_SC1CR1_PBOFF;     //parity bit disable
+ 274   2                SC1CR1&=0XCF;          //datalegth 8bit
+ 275   2                set_SC1CR0_NSB;        //stop bit = 1bit
+ 276   2            break;    
+ 277   2        }
+ 278   1      }
+ 279          //********************************************************************************************************
+             -********  
+ 280          //**** UART Receive data without interrupt  
+ 281          //**** For example: UART_Open(UART0_Timer1,1200)
+ 282          unsigned char UART_Receive_Data(unsigned char UARTPort)
+ 283          {
+ 284   1          unsigned char c;
+ 285   1          SFRS = 0x00;
+ 286   1          switch (UARTPort)
+ 287   1          {
+ 288   2            case UART0:
+ 289   2              while (!RI);
+ 290   2              c = SBUF;
+ 291   2              RI = 0;
+C51 COMPILER V9.60.7.0   UART                                                              04/26/2024 15:10:37 PAGE 6   
+
+ 292   2            break;
+ 293   2            case UART1:
+ 294   2              while (!RI_1);
+ 295   2              c = SBUF1;
+ 296   2              RI_1 = 0;
+ 297   2            break;
+ 298   2            case UART2:
+ 299   2              clr_SC0CR0_RXOFF;
+ 300   2              while((SC0TSR&SET_BIT1)==SET_BIT1);
+ 301   2              c = SC0DR;
+ 302   2            break;
+ 303   2            case UART3:
+ 304   2              clr_SC1CR0_RXOFF;
+ 305   2              while((SC1TSR&&SET_BIT1)==SET_BIT1);
+ 306   2              c = SC1DR;
+ 307   2            break;      
+ 308   2          }
+ 309   1          return (c);
+ 310   1      }
+ 311          //********************************************************************************************************
+             -********  
+ 312          //**** UART transfer data without interrupt  
+ 313          //**** For example: UART_Send_Data(UART0,0x55)
+ 314          void UART_Send_Data(unsigned char UARTPort, unsigned char c)
+ 315          {
+ 316   1          SFRS = 0x00;
+ 317   1          switch (UARTPort)
+ 318   1          {
+ 319   2            case UART0:
+ 320   2              SFRS = 0;
+ 321   2              TI = 0;
+ 322   2              SBUF = c;
+ 323   2              while(TI==0);
+ 324   2              TI = 0;
+ 325   2            break;
+ 326   2            case UART1:
+ 327   2              SFRS = 0;
+ 328   2              TI_1 = 0;
+ 329   2              SBUF1 = c;
+ 330   2              while(TI_1==0);
+ 331   2              TI_1 = 0;
+ 332   2      //           TI_1 = 0;
+ 333   2      //            SBUF1 = c;
+ 334   2      //            TxTOut=0;
+ 335   2      //            nop;nop;nop;nop;nop;
+ 336   2      //            nop;nop;nop;nop;nop;
+ 337   2      //            while((TI_1==0) && (TxTOut<=230))
+ 338   2      //            {
+ 339   2      //              TxTOut++;
+ 340   2      //            //  nop;nop;nop;nop;nop;
+ 341   2      //            }
+ 342   2      //            TI_1 = 0;
+ 343   2            
+ 344   2            
+ 345   2            break;
+ 346   2            case UART2:
+ 347   2              clr_SC0CR0_TXOFF;
+ 348   2              SC0DR = c;
+ 349   2              TxTOut=0;
+ 350   2              nop;nop;nop;nop;nop;
+ 351   2              nop;nop;nop;nop;nop;
+ 352   2              while(((SC0TSR|CLR_BIT3)==CLR_BIT3) && (TxTOut<=230))
+C51 COMPILER V9.60.7.0   UART                                                              04/26/2024 15:10:37 PAGE 7   
+
+ 353   2                {
+ 354   3                    TxTOut++;
+ 355   3                  //  nop;nop;nop;nop;nop;
+ 356   3                  }
+ 357   2              clr_SC0CR0_TXOFF;
+ 358   2            break;
+ 359   2            case UART3:
+ 360   2              clr_SC1CR0_TXOFF;
+ 361   2              SFRS=2;
+ 362   2              SC1DR = c;
+ 363   2              while((SC1TSR|CLR_BIT3)==CLR_BIT3);
+ 364   2              clr_SC1CR0_TXOFF;
+ 365   2            break;
+ 366   2          }
+ 367   1      }
+ 368          
+ 369          
+ 370          void UART_Send_String(unsigned char UARTPort, unsigned char *c)
+ 371          {
+ 372   1         switch (UARTPort)
+ 373   1          {
+ 374   2            case UART0:
+ 375   2              while(*c !='\0')
+ 376   2              {
+ 377   3                UART_Send_Data(UART0,*c);
+ 378   3                c++;
+ 379   3              }
+ 380   2              break;
+ 381   2            case UART1:
+ 382   2              while(*c !='\0')
+ 383   2              {
+ 384   3                UART_Send_Data(UART1,*c);
+ 385   3                c++;
+ 386   3                //Delay_1ms(1);
+ 387   3              }
+ 388   2              break;
+ 389   2            case UART2:
+ 390   2              while(*c !='\0')
+ 391   2              {
+ 392   3                UART_Send_Data(UART2,*c);
+ 393   3                c++;
+ 394   3                Delay_1ms(1);
+ 395   3              }
+ 396   2              break;  
+ 397   2              
+ 398   2          }
+ 399   1      }
+ 400          
+ 401          /**
+ 402           * @brief       UART interrupt enable setting 
+ 403           * @param       u8UARTPort: UART0/UART1/UART2/UART3 baudrate value
+ 404           * @param       u8UARTINTStatus: Disable/Enable
+ 405           * @return      none
+ 406           * @details     none
+ 407           * @note        max baud rate = 1.5MHz when Fsys = 24MHz
+ 408           */
+ 409          void UART_Interrupt_Enable(unsigned char u8UARTPort, unsigned char u8UARTINTStatus)
+ 410          {
+ 411   1          switch (u8UARTPort)
+ 412   1          {
+ 413   2              case UART0: 
+ 414   2                switch(u8UARTINTStatus)
+C51 COMPILER V9.60.7.0   UART                                                              04/26/2024 15:10:37 PAGE 8   
+
+ 415   2                {
+ 416   3                  case Disable: clr_IE_ES; break;
+ 417   3                  case Enable:  set_IE_ES; break;
+ 418   3                }
+ 419   2              break;
+ 420   2              case UART1:
+ 421   2                switch(u8UARTINTStatus)
+ 422   2                {
+ 423   3                  case Disable: clr_EIE1_ES1; break;
+ 424   3                  case Enable:  set_EIE1_ES1; break;
+ 425   3                }
+ 426   2              break;
+ 427   2              case UART2:
+ 428   2                switch(u8UARTINTStatus)
+ 429   2                {
+ 430   3                  case Disable: clr_SC0IE_TBEIEN;
+ 431   3                                clr_SC0IE_RDAIEN;
+ 432   3                                break;
+ 433   3                  case Enable: set_SC0IE_TBEIEN;
+ 434   3                               set_SC0IE_RDAIEN;
+ 435   3                                break;
+ 436   3                }
+ 437   2              break;
+ 438   2              case UART3:
+ 439   2               switch (u8UARTINTStatus)
+ 440   2                {
+ 441   3                  case Disable: clr_SC1IE_TBEIEN;
+ 442   3                                clr_SC1IE_RDAIEN;
+ 443   3                                break;
+ 444   3                  case Enable: set_SC1IE_TBEIEN;
+ 445   3                               set_SC1IE_RDAIEN;
+ 446   3                                break;
+ 447   3                }
+ 448   2              break;
+ 449   2          }
+ 450   1      }
+ 451          
+ 452          void UART0_LIRC_Baudrate2400_Open(void)
+ 453          {
+ 454   1          SFRS = 0x00;
+ 455   1          SCON = 0x50;             //UART0 Mode1,REN=1,TI=1
+ 456   1          TMOD |= 0x20;            //Timer1 Mode1
+ 457   1          set_PCON_SMOD;          //UART0 Double Rate Enable
+ 458   1          clr_CKCON_T1M;
+ 459   1          clr_T3CON_BRCK;          //Serial port 0 baud rate clock source = Timer1
+ 460   1          TH1 = 255;
+ 461   1          set_TCON_TR1;
+ 462   1      //    set_SCON_TI;           //For printf function must setting TI = 1
+ 463   1      }
+ 464          
+ 465          //typedef s32 (*Callback_ATResponse)(char* line, u32 len, void* userData);
+ 466          //extern s32 Ql_RIL_SendATCmd(char*  atCmd, u32 atCmdLen, Callback_ATResponse atRsp_callBack, void* userDa
+             -ta, u32 timeOut);
+ 467          
+ 468          
+ 469          //UINT8 SendAtCmd(char* atCmd, UINT16 atCmdLen, UINT8 atRsp_callBack, void* userData, UINT32 timeOut)
+ 470          //{
+ 471          //  UINT32 TimeOut = timeOut;
+ 472          //  UINT8 PreUartLine=0;
+ 473          //  if(TimeOut==0)
+ 474          //  TimeOut=5000;
+ 475          //  UartLine=0;
+C51 COMPILER V9.60.7.0   UART                                                              04/26/2024 15:10:37 PAGE 9   
+
+ 476          //  
+ 477          //  
+ 478          //  UART_Send_String(UART0,atCmd);
+ 479          //  
+ 480          //  Check:
+ 481          //  while((PreUartLine==UartLine) && (TimeOut>0))
+ 482          //  {
+ 483          //    
+ 484          //    Delay_1ms(1);
+ 485          //    TimeOut--;
+ 486          //  }
+ 487          //  PreUartLine = UartLine;
+ 488          //  
+ 489          //  //UART_Send_String(UART0,UartRecBuff[UartLine-1]);
+ 490          //  
+ 491          //  if(TimeOut!=0)
+ 492          //    UART_Send_String(UART1,UartRecBuff[UartLine-1]);
+ 493          //  else
+ 494          //  {
+ 495          //    UART_Send_String(UART1,"TIMEOUT\r\n");
+ 496          //    return 0;
+ 497          //  }
+ 498          //  
+ 499          //  UartRecFlag=0;
+ 500          //  if(strstr(UartRecBuff[UartLine-1],"OK\r\n"))
+ 501          //  {
+ 502          //    UART_Send_String(UART1,"return 1\r\n");
+ 503          //    return 1;
+ 504          //  }
+ 505          //  goto Check;
+ 506          //  //atRsp_callBack(0,0,userData);
+ 507          //}
+ 508          
+ 509          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1644    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =    168      14
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
